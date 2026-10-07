@@ -1,0 +1,8 @@
+data/
+models/
+mlruns/
+.venv/
+__pycache__/
+.env
+*.parquet
+*.nc

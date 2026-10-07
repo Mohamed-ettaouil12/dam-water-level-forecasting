@@ -1,0 +1,40 @@
+barrages:
+  - nom: "Al Massira"
+    latitude: 32.2833
+    longitude: -7.5833
+    bassin_versant: "Oum Er-Rbia"
+    capacite_max_m3: 2650000000
+    hauteur_m: 102
+    annee_mise_en_service: 1979
+
+  - nom: "Bin el Ouidane"
+    latitude: 32.1000
+    longitude: -6.5500
+    bassin_versant: "Oum Er-Rbia"
+    capacite_max_m3: 1384000000
+    hauteur_m: 133
+    annee_mise_en_service: 1953
+
+  - nom: "Idriss Ier"
+    latitude: 34.7833
+    longitude: -4.1667
+    bassin_versant: "Inaouen"
+    capacite_max_m3: 1000000000
+    hauteur_m: 72
+    annee_mise_en_service: 1973
+
+  - nom: "Sidi Chahed"
+    latitude: 34.1000
+    longitude: -5.1000
+    bassin_versant: "Moulouya"
+    capacite_max_m3: 600000000
+    hauteur_m: 65
+    annee_mise_en_service: 1996
+
+  - nom: "Mansour Eddahbi"
+    latitude: 31.2833
+    longitude: -5.5167
+    bassin_versant: "Draa"
+    capacite_max_m3: 550000000
+    hauteur_m: 52
+    annee_mise_en_service: 1972
