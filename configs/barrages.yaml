@@ -38,3 +38,35 @@ barrages:
     capacite_max_m3: 550000000
     hauteur_m: 52
     annee_mise_en_service: 1972
+
+  - nom: "Yacoub El Mansour"
+    latitude: 31.5833
+    longitude: -7.7833
+    bassin_versant: "Tensift"
+    capacite_max_m3: 57450000
+    hauteur_m: 55
+    annee_mise_en_service: 1929
+
+  - nom: "Lalla Takerkoust"
+    latitude: 31.3667
+    longitude: -7.8167
+    bassin_versant: "Tensift"
+    capacite_max_m3: 50820000
+    hauteur_m: 52
+    annee_mise_en_service: 1935
+
+  - nom: "Mohamed Ben Slimane El Jazouli"
+    latitude: 31.4500
+    longitude: -7.9167
+    bassin_versant: "Tensift"
+    capacite_max_m3: 12310000
+    hauteur_m: 38
+    annee_mise_en_service: 2000
+
+  - nom: "Abou El Abess Sebti"
+    latitude: 31.5500
+    longitude: -7.6167
+    bassin_versant: "Tensift"
+    capacite_max_m3: 22370000
+    hauteur_m: 42
+    annee_mise_en_service: 1976
