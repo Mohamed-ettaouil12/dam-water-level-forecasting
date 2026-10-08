@@ -1,5 +1,6 @@
 """Configuration centrale du projet."""
 
+import os
 from pathlib import Path
 import torch
 
@@ -8,6 +9,8 @@ HORIZONS = [1, 3, 6]
 COVERAGE = 0.90
 TEST_START_YEAR = 2021
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+
+DATA_SOURCE = os.getenv("DATA_SOURCE", "synthetic")
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_RAW = ROOT / "data" / "raw"
