@@ -1,4 +1,4 @@
-"""Téléchargement automatique des niveaux de barrages depuis les sources officielles marocaines."""
+"""Téléchargement automatique des niveaux de barrages depuis les sources officielles marocaines (non bloquant)."""
 
 import logging
 import time
@@ -44,9 +44,10 @@ def download_with_retry(
     max_retries: int = MAX_RETRIES,
 ) -> bool:
     """Télécharge un fichier avec retry."""
+    logger.info("Tentative : %s", url)
     for attempt in range(1, max_retries + 1):
         try:
-            logger.info("Tentative %d/%d : %s", attempt, max_retries, url)
+            logger.info("  Tentative %d/%d", attempt, max_retries)
             resp = session.get(url, timeout=REQUEST_TIMEOUT, stream=True)
             resp.raise_for_status()
 
@@ -56,15 +57,15 @@ def download_with_retry(
                     f.write(chunk)
 
             file_size = output_path.stat().st_size
-            logger.info("Succès : %s (%.2f MB)", output_path.name, file_size / 1e6)
+            logger.info("  Succès : %s (%.2f MB)", output_path.name, file_size / 1e6)
             return True
 
         except requests.RequestException as e:
-            logger.warning("Échec tentative %d : %s", attempt, e)
+            logger.warning("  Échec tentative %d : %s", attempt, e)
             if attempt < max_retries:
                 time.sleep(RETRY_DELAY)
             else:
-                logger.error("Échec définitif après %d tentatives : %s", max_retries, url)
+                logger.error("  Échec définitif après %d tentatives : %s", max_retries, url)
                 if output_path.exists():
                     output_path.unlink()
                 return False
@@ -164,8 +165,8 @@ def extract_pdf_tables(pdf_path: Path) -> list[Path]:
 
 
 def main() -> int:
-    """Point d'entrée principal."""
-    logger.info("=== Début téléchargement données barrages ===")
+    """Point d'entrée principal — NON BLOQUANT (sort toujours avec code 0)."""
+    logger.info("=== Début téléchargement données barrages (bonus, non bloquant) ===")
     session = make_session()
     all_downloaded = []
 
@@ -182,11 +183,14 @@ def main() -> int:
         logger.info("--- Extraction PDF : %s ---", pdf_file.name)
         extract_pdf_tables(pdf_file)
 
-    logger.info("=== Fin téléchargement : %d fichiers ===", len(all_downloaded))
-    for f in all_downloaded:
-        logger.info("  - %s (%.2f MB)", f.name, f.stat().st_size / 1e6)
+    if not all_downloaded:
+        logger.warning("Sources réelles indisponibles — le projet continue en synthétique")
+    else:
+        logger.info("=== Fin téléchargement : %d fichiers récupérés ===", len(all_downloaded))
+        for f in all_downloaded:
+            logger.info("  - %s (%.2f MB)", f.name, f.stat().st_size / 1e6)
 
-    return 0 if all_downloaded else 1
+    return 0
 
 
 if __name__ == "__main__":
