@@ -54,7 +54,8 @@ def load_raw_data(source: Literal["real", "synthetic"]) -> pd.DataFrame:
         if not path.exists():
             raise FileNotFoundError(f"Fichier synthétique non trouvé : {path}. Lancez src.data.synthetic")
         df = pd.read_parquet(path)
-        df = df[["date", "barrage", "niveau_pct", "source"]].copy()
+        # Conserver scenario pour les features statiques
+        df = df[["date", "barrage", "niveau_pct", "source", "scenario"]].copy()
     else:
         raise ValueError(f"Source inconnue : {source}. Attendu 'real' ou 'synthetic'")
 
