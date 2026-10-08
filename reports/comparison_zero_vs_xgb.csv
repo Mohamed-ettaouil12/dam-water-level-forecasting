@@ -1,0 +1,7 @@
+model,horizon,MASE_mean,MASE_std
+Chronos_ZeroShot,1,0.7083,0.1983
+Chronos_ZeroShot,3,2.1707,0.2911
+Chronos_ZeroShot,6,4.2685,0.3472
+Naive_Seasonal,1,1.0266,0.2645
+Naive_Seasonal,3,1.0266,0.2645
+Naive_Seasonal,6,1.0266,0.2645
