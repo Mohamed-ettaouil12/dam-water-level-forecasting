@@ -11,9 +11,21 @@ import numpy as np
 import pandas as pd
 import torch
 from peft import PeftModel
+import peft.tuners.lora.layer as lora_layer
 
 from src.config import DATA_PROCESSED, MLRUNS_DIR, REPORTS_DIR, DATA_SOURCE, SEED
 from src.evaluation.metrics import mae, mase, rmse
+
+# Monkey-patch for torch 2.5+ compatibility
+def _patched_get_in_out_features(module):
+    if hasattr(module, 'weight'):
+        if hasattr(module, 'in_features') and hasattr(module, 'out_features'):
+            return module.in_features, module.out_features
+        elif module.weight.dim() == 2:
+            return module.weight.shape[1], module.weight.shape[0]
+    raise ValueError(f'Cannot get in/out features for {type(module)}')
+
+lora_layer._get_in_out_features = _patched_get_in_out_features
 
 logging.basicConfig(
     level=logging.INFO,
@@ -91,6 +103,9 @@ def load_pipeline_with_lora(
     logger.info(f"Chargement adaptateur LoRA depuis {adapter_path}...")
     pipeline.model.model = PeftModel.from_pretrained(pipeline.model.model, adapter_path)
     pipeline.model.to(device if torch.cuda.is_available() else "cpu")
+    # Ensure tokenizer is also on the same device
+    if hasattr(pipeline, 'tokenizer') and hasattr(pipeline.tokenizer, 'model'):
+        pipeline.tokenizer.model.to(device if torch.cuda.is_available() else "cpu")
     pipeline.model.eval()
 
     logger.info("Modèle LoRA chargé et prêt pour l'inférence")

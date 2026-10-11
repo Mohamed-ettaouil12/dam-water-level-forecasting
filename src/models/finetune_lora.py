@@ -7,12 +7,25 @@ from pathlib import Path
 from typing import List, Tuple
 
 import numpy as np
+import pandas as pd
 import torch
 import torch.nn as nn
 from peft import LoraConfig, TaskType, get_peft_model
+import peft.tuners.lora.layer as lora_layer
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 from transformers import get_linear_schedule_with_warmup
+
+# Monkey-patch for torch 2.5+ compatibility (torch.distributed.tensor missing)
+def _patched_get_in_out_features(module):
+    if hasattr(module, 'weight'):
+        if hasattr(module, 'in_features') and hasattr(module, 'out_features'):
+            return module.in_features, module.out_features
+        elif module.weight.dim() == 2:
+            return module.weight.shape[1], module.weight.shape[0]
+    raise ValueError(f'Cannot get in/out features for {type(module)}')
+
+lora_layer._get_in_out_features = _patched_get_in_out_features
 
 from src.config import DATA_PROCESSED, MLRUNS_DIR, MODELS_DIR, DATA_SOURCE, SEED
 
