@@ -190,16 +190,17 @@ def create_targets(df: pd.DataFrame, horizons: List[int]) -> pd.DataFrame:
     return df
 
 
-def naive_seasonal_forecast(df: pd.DataFrame, horizon: int) -> np.ndarray:
-    """Prévision naïve saisonnière = même mois année précédente."""
-    df = df.sort_values(["barrage", "date"])
+def naive_seasonal_forecast(test_df: pd.DataFrame, train_df: pd.DataFrame, horizon: int) -> np.ndarray:
+    """Prévision naïve saisonnière = même mois année précédente (depuis train)."""
+    test_df = test_df.sort_values(["barrage", "date"])
+    train_df = train_df.sort_values(["barrage", "date"])
     preds = []
-    for barrage, group in df.groupby("barrage"):
-        group = group.sort_values("date")
-        for i in range(len(group)):
-            target_date = group.iloc[i]["date"]
+    for barrage, test_group in test_df.groupby("barrage"):
+        train_group = train_df[train_df["barrage"] == barrage].sort_values("date")
+        for i in range(len(test_group)):
+            target_date = test_group.iloc[i]["date"]
             ref_date = target_date - pd.DateOffset(years=1)
-            ref_row = group[group["date"] == ref_date]
+            ref_row = train_group[train_group["date"] == ref_date]
             if len(ref_row) > 0:
                 preds.append(ref_row["niveau_pct"].values[0])
             else:
@@ -306,7 +307,7 @@ def evaluate_window(
     model = train_xgboost(X_train, y_train)
     y_pred = model.predict(X_test)
 
-    naive_pred = naive_seasonal_forecast(test_clean, horizon)
+    naive_pred = naive_seasonal_forecast(test_clean, train_clean, horizon)
 
     metrics = {
         "MAE": mae(y_test.values, y_pred),

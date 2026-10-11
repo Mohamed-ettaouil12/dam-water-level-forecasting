@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "barrages-maroc"
+version = "0.1.0"
+description = "Prévision niveau barrages Maroc"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+select = ["E", "F", "I", "UP", "B", "C4", "ANN", "T20", "PTH", "ERA", "RET", "SIM", "TID", "ARG", "PTH"]
+ignore = ["ANN101", "ANN102", "ANN103", "T201", "T203", "PTH123", "ERA001"]
+exclude = [".venv", "__pycache__", ".pytest_cache", "mlruns", "models", "data"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true

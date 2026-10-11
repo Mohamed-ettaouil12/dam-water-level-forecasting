@@ -1,0 +1,1 @@
+"""Barrages Maroc - Package principal."""
