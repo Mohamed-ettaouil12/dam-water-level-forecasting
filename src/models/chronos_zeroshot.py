@@ -72,7 +72,7 @@ def get_chronos_pipeline():
     """Charge le pipeline Chronos une seule fois (singleton)."""
     global _chronos_pipeline
     if "_chronos_pipeline" not in globals() or _chronos_pipeline is None:
-        from chronos import BaseChronosPipeline
+        from chronos.chronos_bolt import BaseChronosPipeline
         logger.info("Chargement modèle Chronos-Bolt (amazon/chronos-bolt-small)...")
         _chronos_pipeline = BaseChronosPipeline.from_pretrained(
             "amazon/chronos-bolt-small",

@@ -73,7 +73,7 @@ def load_pipeline_with_lora(
 ) -> Tuple:
     """Charge le pipeline base + adaptateur LoRA."""
     import torch
-    from chronos import BaseChronosPipeline
+    from chronos.chronos_bolt import BaseChronosPipeline
     from peft import PeftModel
 
     logger.info("Chargement modèle base Chronos-t5-small...")
