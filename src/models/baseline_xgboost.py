@@ -191,14 +191,14 @@ def create_targets(df: pd.DataFrame, horizons: List[int]) -> pd.DataFrame:
 
 
 def naive_seasonal_forecast(test_df: pd.DataFrame, train_df: pd.DataFrame, horizon: int) -> np.ndarray:
-    """Prévision naïve saisonnière = même mois année précédente (depuis train)."""
+    """Prévision naïve saisonnière = même mois année précédente (depuis train), ajustée pour l'horizon."""
     test_df = test_df.sort_values(["barrage", "date"])
     train_df = train_df.sort_values(["barrage", "date"])
     preds = []
     for barrage, test_group in test_df.groupby("barrage"):
         train_group = train_df[train_df["barrage"] == barrage].sort_values("date")
         for i in range(len(test_group)):
-            target_date = test_group.iloc[i]["date"]
+            target_date = test_group.iloc[i]["date"] + pd.DateOffset(months=horizon)
             ref_date = target_date - pd.DateOffset(years=1)
             ref_row = train_group[train_group["date"] == ref_date]
             if len(ref_row) > 0:

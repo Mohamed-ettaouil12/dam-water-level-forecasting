@@ -5,3 +5,6 @@ Chronos_ZeroShot,6,4.2685,0.3472
 Naive_Seasonal,1,1.0266,0.2645
 Naive_Seasonal,3,1.0266,0.2645
 Naive_Seasonal,6,1.0266,0.2645
+XGBoost,1,0.7369,0.1735
+XGBoost,3,0.8882,0.2424
+XGBoost,6,0.9477,0.2667

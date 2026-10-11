@@ -174,8 +174,8 @@ def evaluate_window(
         else:
             y_pred.append(np.nan)
         
-        # Prévision naïve (même mois année précédente)
-        target_date = test_clean.iloc[i]["date"]
+        # Prévision naïve saisonnière (même mois année précédente, ajustée pour l'horizon)
+        target_date = test_clean.iloc[i]["date"] + pd.DateOffset(months=horizon)
         ref_date = target_date - pd.DateOffset(years=1)
         ref_row = train_clean[train_clean["date"] == ref_date]
         if len(ref_row) > 0:
@@ -187,18 +187,6 @@ def evaluate_window(
     naive_pred = np.array(naive_pred)
     
     logger.debug(f"y_pred shape: {y_pred.shape}, y_test shape: {y_test.shape}, horizon={horizon}")
-
-    # Prévision naïve saisonnière (même mois année précédente)
-    naive_pred = []
-    for i in range(len(test_clean)):
-        target_date = test_clean.iloc[i]["date"]
-        ref_date = target_date - pd.DateOffset(years=1)
-        ref_row = train_clean[train_clean["date"] == ref_date]
-        if len(ref_row) > 0:
-            naive_pred.append(ref_row["niveau_pct"].values[0])
-        else:
-            naive_pred.append(np.nan)
-    naive_pred = np.array(naive_pred)
     logger.debug(f"naive_pred shape: {naive_pred.shape}")
 
     # Métriques
@@ -322,9 +310,9 @@ def run_chronos() -> pd.DataFrame:
 
 def create_comparison_table(chronos_df: pd.DataFrame, xgb_df: pd.DataFrame) -> pd.DataFrame:
     """Crée le tableau comparatif final."""
-    # Filtrer MASE
-    chronos_mase = chronos_df[chronos_df["metric"] == "MASE"]
-    naive_df = chronos_df[chronos_df["model"] == "Naive_Seasonal"]
+    # Filtrer MASE par modèle
+    chronos_mase = chronos_df[(chronos_df["metric"] == "MASE") & (chronos_df["model"] == "Chronos_ZeroShot")]
+    naive_df = chronos_df[(chronos_df["metric"] == "MASE") & (chronos_df["model"] == "Naive_Seasonal")]
     
     # Moyennes globales par modèle et horizon
     comparison = []
@@ -342,7 +330,7 @@ def create_comparison_table(chronos_df: pd.DataFrame, xgb_df: pd.DataFrame) -> p
 
     # Ajouter XGBoost si disponible
     if not xgb_df.empty and "metric" in xgb_df.columns:
-        xgb_mase = xgb_df[xgb_df["metric"] == "MASE"]
+        xgb_mase = xgb_df[(xgb_df["metric"] == "MASE") & (xgb_df["model"] == "XGBoost")]
         for horizon in HORIZONS:
             hdf = xgb_mase[xgb_mase["horizon"] == horizon]
             if len(hdf) > 0:
