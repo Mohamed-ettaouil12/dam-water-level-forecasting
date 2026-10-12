@@ -13,7 +13,7 @@ import torch
 from peft import PeftModel
 import peft.tuners.lora.layer as lora_layer
 
-from src.config import DATA_PROCESSED, MLRUNS_DIR, REPORTS_DIR, DATA_SOURCE, SEED
+from src.config import DATA_PROCESSED, MLRUNS_DIR, REPORTS_DIR, DATA_SOURCE, SEED, DEVICE
 from src.evaluation.metrics import mae, mase, rmse
 
 # Monkey-patch for torch 2.5+ compatibility
@@ -81,17 +81,23 @@ def load_data_by_source() -> pd.DataFrame:
 
 def load_pipeline_with_lora(
     horizon: int,
-    device: str = "cuda",
+    device: str = None,
 ) -> Tuple:
     """Charge le pipeline base + adaptateur LoRA."""
     import torch
     from chronos.chronos_bolt import BaseChronosPipeline
     from peft import PeftModel
 
+    # Use DEVICE from config if not provided
+    if device is None:
+        device = DEVICE
+
+    logger.info(f"Device utilisé : {device}")
     logger.info("Chargement modèle base Chronos-t5-small...")
+    # Load on CPU first to avoid PEFT/distributed issues, then move model to target device
     pipeline = BaseChronosPipeline.from_pretrained(
         "amazon/chronos-t5-small",
-        device_map=device if torch.cuda.is_available() else "cpu",
+        device_map="cpu",
         torch_dtype=torch.bfloat16,
     )
 
@@ -102,11 +108,15 @@ def load_pipeline_with_lora(
 
     logger.info(f"Chargement adaptateur LoRA depuis {adapter_path}...")
     pipeline.model.model = PeftModel.from_pretrained(pipeline.model.model, adapter_path)
-    pipeline.model.to(device if torch.cuda.is_available() else "cpu")
-    # Ensure tokenizer is also on the same device
-    if hasattr(pipeline, 'tokenizer') and hasattr(pipeline.tokenizer, 'model'):
-        pipeline.tokenizer.model.to(device if torch.cuda.is_available() else "cpu")
-    pipeline.model.eval()
+
+    # Ensure tokenizer buffers (boundaries, centers) stay on CPU to avoid device mismatch in bucketize
+    if hasattr(pipeline.tokenizer, 'boundaries') and pipeline.tokenizer.boundaries.device.type != 'cpu':
+        pipeline.tokenizer.boundaries = pipeline.tokenizer.boundaries.cpu()
+    if hasattr(pipeline.tokenizer, 'centers') and pipeline.tokenizer.centers.device.type != 'cpu':
+        pipeline.tokenizer.centers = pipeline.tokenizer.centers.cpu()
+
+    # Ensure model is on target device
+    pipeline.model = pipeline.model.to(device).eval()
 
     logger.info("Modèle LoRA chargé et prêt pour l'inférence")
     return pipeline
@@ -120,7 +130,8 @@ def chronos_predict_series(
 ) -> np.ndarray:
     """Prédit avec Chronos LoRA pour une série (retourne médiane)."""
     import torch
-    context = torch.tensor(series.astype(np.float32)).to(device)
+    # Keep context on CPU; tokenizer buffers are on CPU, pipeline moves tokens to model device internally
+    context = torch.tensor(series.astype(np.float32))
     forecast = pipeline.predict(inputs=context, prediction_length=horizon)
     # forecast shape: [batch=1, num_samples, prediction_length]
     median_forecast = forecast[0, :, :].median(dim=0).values.cpu().numpy()
@@ -321,15 +332,15 @@ def create_final_comparison(
 
 def main(
     horizon: int = 1,
-    device: str = "auto",
+    device: str = None,
     seed: int = SEED,
 ) -> int:
     """Point d'entrée principal."""
     torch.manual_seed(SEED)
     np.random.seed(SEED)
 
-    if device == "auto":
-        device = "cuda" if torch.cuda.is_available() else "cpu"
+    if device is None:
+        device = DEVICE
 
     gpu_info = get_gpu_info()
     logger.info(f"Device: {device}")
@@ -348,7 +359,6 @@ def main(
 
     # Chargement pipeline LoRA
     pipeline = load_pipeline_with_lora(horizon, device)
-    device_obj = torch.device(device)
 
     # MLflow
     mlflow.set_tracking_uri(f"file://{MLRUNS_DIR.absolute()}")
