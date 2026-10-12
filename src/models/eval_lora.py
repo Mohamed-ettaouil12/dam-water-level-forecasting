@@ -450,20 +450,21 @@ def main(
                        mean_naive["RMSE"], std_naive["RMSE"],
                        mean_naive["MASE"], std_naive["MASE"])
 
-    # Sauvegarde résultats LoRA
+    # Sauvegarde résultats LoRA (par horizon pour éviter d'écraser)
     results_df = pd.DataFrame(all_results)
-    output_path = Path("reports") / "metrics_chronos_lora.csv"
+    output_path = Path("reports") / f"metrics_chronos_lora_h{horizon}.csv"
     results_df.to_csv(output_path, index=False)
     logger.info("Résultats LoRA sauvegardés: %s", output_path)
 
-    # Tableau comparatif final
+    # Tableau comparatif final - lire le fichier fusionné (tous horizons)
+    lora_merged = pd.read_csv("reports/metrics_chronos_lora.csv")
     chronos_df = pd.read_csv("reports/metrics_chronos_zeroshot.csv")
     xgb_df = pd.read_csv("reports/metrics_xgboost.csv") if Path("reports/metrics_xgboost.csv").exists() else pd.DataFrame()
 
     comparison = create_final_comparison(
-        pd.DataFrame(all_results),
-        pd.read_csv("reports/metrics_chronos_zeroshot.csv"),
-        pd.read_csv("reports/metrics_xgboost.csv") if Path("reports/metrics_xgboost.csv").exists() else pd.DataFrame(),
+        lora_merged,
+        chronos_df,
+        xgb_df,
     )
 
     output_path = Path("reports") / "comparison_zero_vs_xgb.csv"
