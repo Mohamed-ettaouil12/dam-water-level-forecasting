@@ -289,34 +289,32 @@ def create_final_comparison(
     xgb_df: pd.DataFrame,
 ) -> pd.DataFrame:
     """Crée le tableau comparatif final des 4 modèles."""
-    comparison = []
-
-    # Chronos LoRA
-    lora_mase = lora_df[(lora_df["metric"] == "MASE") & (lora_df["model"] == "Chronos_LoRA")]
-    naive_df = lora_df[lora_df["model"] == "Naive_Seasonal"]
-
-    # Recharge Chronos zero-shot
+    # Load Naive from zero-shot CSV (has all 3 horizons)
     chronos_zs = pd.read_csv("reports/metrics_chronos_zeroshot.csv")
-    zs_mase = chronos_zs[(chronos_zs["metric"] == "MASE") & (chronos_zs["model"] == "Chronos_ZeroShot")]
+    naive_zs = chronos_zs[(chronos_zs["metric"] == "MASE") & (chronos_zs["model"] == "Naive_Seasonal")]
 
-    # XGBoost
+    # XGBoost MASE
     xgb_df = pd.read_csv("reports/metrics_xgboost.csv") if Path("reports/metrics_xgboost.csv").exists() else pd.DataFrame()
     if not xgb_df.empty:
         xgb_mase = xgb_df[(xgb_df["metric"] == "MASE") & (xgb_df["model"] == "XGBoost")]
     else:
         xgb_mase = pd.DataFrame()
 
+    # ZeroShot MASE
+    zs_mase = chronos_zs[(chronos_zs["metric"] == "MASE") & (chronos_zs["model"] == "Chronos_ZeroShot")]
+
+    # LoRA MASE
+    lora_mase = lora_df[(lora_df["metric"] == "MASE") & (lora_df["model"] == "Chronos_LoRA")]
+
     all_models = {
-        "Chronos_LoRA": lora_df[(lora_df["model"] == "Chronos_LoRA") & (lora_df["metric"] == "MASE")],
-        "Chronos_ZeroShot": chronos_zs[(chronos_zs["metric"] == "MASE") & (chronos_zs["model"] == "Chronos_ZeroShot")],
+        "Chronos_LoRA": lora_mase,
+        "Chronos_ZeroShot": zs_mase,
         "XGBoost": xgb_mase,
-        "Naive_Seasonal": naive_df[naive_df["metric"] == "MASE"],
+        "Naive_Seasonal": naive_zs,
     }
 
     comparison = []
     for model_name, model_df in all_models.items():
-        if model_df.empty:
-            continue
         for h in [1, 3, 6]:
             hdf = model_df[model_df["horizon"] == h]
             if len(hdf) > 0:
@@ -325,6 +323,13 @@ def create_final_comparison(
                     "horizon": h,
                     "MASE_mean": round(hdf["mean"].mean(), 4),
                     "MASE_std": round(hdf["std"].mean(), 4),
+                })
+            else:
+                comparison.append({
+                    "model": model_name,
+                    "horizon": h,
+                    "MASE_mean": "NA",
+                    "MASE_std": "NA",
                 })
 
     return pd.DataFrame(comparison)
