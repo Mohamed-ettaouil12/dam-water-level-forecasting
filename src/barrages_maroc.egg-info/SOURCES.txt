@@ -15,9 +15,11 @@ src/evaluation/metrics.py
 src/models/__init__.py
 src/models/baseline_xgboost.py
 src/models/chronos_zeroshot.py
+src/models/conformal.py
 src/models/eval_lora.py
 src/models/finetune_lora.py
 tests/test_cleaning.py
+tests/test_coverage.py
 tests/test_ingest.py
 tests/test_metrics.py
 tests/test_synthetic.py

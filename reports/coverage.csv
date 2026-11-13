@@ -1,0 +1,4 @@
+barrage,horizon,window,model,coverage,crps,n_calib,n_test
+generic_Draa_55,1,0,Chronos_ZeroShot,0.8333333333333334,14.185085043660543,12,12
+generic_Draa_55,1,0,Chronos_LoRA,0.9166666666666666,15.87363651522739,12,12
+generic_Draa_55,1,0,Naive_Seasonal,0.8181818181818182,21.733725571863094,12,11
